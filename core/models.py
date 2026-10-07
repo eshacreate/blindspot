@@ -21,3 +21,14 @@ class BlindSpot(BaseModel):
     evidence: list[str]
     confidence: str
     suggested_action: str
+class PlannedAction(BaseModel):
+    text: str
+    completed: bool = False
+
+
+class WorldModel(BaseModel):
+    events: list[CalendarEvent] = []
+    commitments: list[Commitment] = []
+    planned_actions: list[PlannedAction] = []
+    notes: list[str] = []
+    locations: list[str] = []
