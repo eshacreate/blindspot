@@ -1,5 +1,7 @@
 import json
 import os
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from groq import Groq
@@ -12,6 +14,8 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
 def extract_context(text: str) -> WorldModel:
+    today = datetime.now(ZoneInfo("Asia/Karachi")).date()
+    tomorrow = today + timedelta(days=1)
     prompt = f"""
 You are the context extraction component of BlindSpot,
 an omission-detection system.
@@ -40,7 +44,7 @@ Event rules:
   meetings = 60 minutes
   flights = 120 minutes
 - Never make start and end identical unless the event is truly instantaneous.
-- For "tomorrow", use 2026-10-08.
+- For "tomorrow", use {tomorrow.isoformat()}.
 - Preserve the user's explicitly stated time.
 - Do not invent a specific location unless the user stated it.
 
@@ -70,7 +74,7 @@ Rules:
 - Locations mentioned by the user should go into locations.
 - Return JSON only.
 
-Current date: 2026-10-07
+Current date: {today.isoformat()}
 
 User text:
 {text}

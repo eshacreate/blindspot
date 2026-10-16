@@ -1,5 +1,27 @@
+# Python
 .venv/
+venv/
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Secrets and local configuration
 .env
+.env.*
+!.env.example
+
+# Editors and operating-system files
 .vscode/
+.idea/
+.DS_Store
+
+# Local logs and generated backups
+*.log
+static/*.backup.html
+static/*.before-*.html
+
+# Local HTML design snapshots
+static/*.before-*
+static/index.pre-theme.html

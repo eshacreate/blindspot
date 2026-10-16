@@ -7,25 +7,49 @@ def find_missing_prerequisites(
 ) -> list[str]:
     missing = []
 
+    flights = [
+        event for event in events
+        if "flight" in event.title.lower()
+    ]
+
+    # Completed preparation still counts as preparation.
     action_texts = [
         action.text.lower()
         for action in planned_actions
-        if not action.completed
     ]
 
-    for event in events:
-        title = event.title.lower()
+    checkin_actions = [
+        action for action in action_texts
+        if any(term in action for term in ("check-in", "check in", "checkin"))
+    ]
 
-        if "flight" in title:
+    generic_words = {
+        "flight", "check", "in", "the", "to", "for",
+        "from", "my", "your", "complete", "finish",
+    }
+
+    for event in flights:
+        title_words = {
+            word.strip(".,:;!?()[]{}")
+            for word in event.title.lower().split()
+        }
+        identifiers = title_words - generic_words
+
+        if len(flights) == 1:
+            has_checkin = bool(checkin_actions)
+        else:
+            # With multiple flights, require the check-in action to identify
+            # this flight rather than applying one generic action to all.
             has_checkin = any(
-                "check-in" in action or "check in" in action
-                for action in action_texts
+                identifiers
+                and any(word in action for word in identifiers)
+                for action in checkin_actions
             )
 
-            if not has_checkin:
-                missing.append(
-                    f"Potential missing prerequisite for '{event.title}': "
-                    "no check-in action was found."
-                )
+        if not has_checkin:
+            missing.append(
+                f"Potential missing prerequisite for '{event.title}': "
+                "no matching check-in action was found."
+            )
 
     return missing

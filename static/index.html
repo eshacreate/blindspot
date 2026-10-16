@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlindSpot — See what your plan missed</title>
+<style>
+:root {
+  --bg:#f7f7f2; --paper:#fff; --ink:#18211f; --muted:#727b76;
+  --line:#e7e9e1; --green:#c9f36b; --green-dark:#263b19;
+  --red:#a34535; --shadow:0 18px 55px rgba(26,38,29,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,textarea{font:inherit}
+button{cursor:pointer}
+.shell{max-width:1060px;margin:auto;padding:0 28px}
+header{height:82px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:11px;font-size:20px;font-weight:800;letter-spacing:-.7px}
+.mark{width:35px;height:35px;background:var(--green);border-radius:11px;
+  display:grid;place-items:center;font-size:19px;color:var(--green-dark)}
+.status{font-size:12px;color:#59645a;display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:#78a93d}
+main{padding:58px 0 80px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#65715e}
+h1{font-size:clamp(42px,6vw,68px);line-height:1.02;letter-spacing:-3.5px;
+  max-width:720px;margin:18px 0}
+h1 span{color:#71864d}
+.sub{font-size:16px;line-height:1.7;color:var(--muted);max-width:560px;margin:0}
+.section-label{font-size:12px;font-weight:750;letter-spacing:.3px;margin:35px 0 13px}
+.scenarios{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.scenario{border:1px solid var(--line);background:rgba(255,255,255,.55);
+  border-radius:15px;padding:17px;text-align:left;transition:.18s;min-height:110px}
+.scenario:hover,.scenario.active{border-color:#a7c879;background:#fff;transform:translateY(-2px)}
+.scenario .num{font-size:11px;color:#829078;font-weight:800}
+.scenario strong{display:block;margin:9px 0 5px;font-size:14px}
+.scenario small{font-size:12px;color:var(--muted);line-height:1.5}
+.input-card{background:var(--paper);border:1px solid var(--line);border-radius:20px;
+  padding:20px;margin-top:14px;box-shadow:var(--shadow)}
+.input-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.input-head strong{font-size:14px}
+#charCount{font-size:11px;color:#8a918a}
+textarea{display:block;width:100%;min-height:145px;resize:vertical;border:0;outline:0;
+  color:var(--ink);background:transparent;font-size:15px;line-height:1.75}
+textarea::placeholder{color:#a0a69f}
+.actions{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  border-top:1px solid var(--line);padding-top:15px;margin-top:12px}
+.hint{font-size:12px;color:var(--muted)}
+.primary{background:var(--ink);color:#fff;border:0;border-radius:11px;
+  padding:13px 19px;font-weight:750;font-size:13px;display:flex;align-items:center;gap:10px}
+.primary:hover{background:#34423a}
+.primary:disabled{opacity:.6;cursor:wait}
+.arrow{font-size:18px;color:var(--green)}
+#message{margin-top:16px;font-size:13px;color:var(--red);display:none}
+#results{margin-top:42px;display:none}
+.results-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:18px}
+.results-head h2{font-size:27px;letter-spacing:-1px;margin:7px 0}
+.results-head p{font-size:13px;color:var(--muted);margin:0}
+.count{font-size:12px;font-weight:800;background:var(--green);padding:9px 12px;border-radius:9px;white-space:nowrap}
+.findings{display:grid;gap:12px}
+.finding{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:21px}
+.finding-top{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.finding-icon{width:34px;height:34px;border-radius:10px;background:#f0f2e9;
+  display:grid;place-items:center;font-weight:850}
+.finding-type{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#64735b}
+.finding h3{font-size:18px;letter-spacing:-.4px;margin:0 0 9px}
+.finding .problem{font-size:14px;color:#58615a;line-height:1.65;margin:0}
+.evidence{border-left:2px solid #d8e7bd;padding:3px 0 3px 12px;margin:15px 0;
+  font-size:12px;line-height:1.7;color:#697169}
+.next{background:#f5f7ef;border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6}
+.next b{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  margin-bottom:4px;color:#687b51}
+.confidence{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#7c857d;margin-top:12px}
+.result-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:15px}
+.secondary{background:transparent;border:1px solid var(--line);border-radius:10px;
+  padding:10px 13px;font-size:12px;font-weight:700;color:#4e5a50}
+footer{border-top:1px solid var(--line);padding:22px 0 30px;color:#8b928a;
+  font-size:11px;display:flex;justify-content:space-between;gap:12px}
+@media(max-width:650px){
+ .shell{padding:0 18px}header{height:68px}main{padding-top:42px}
+ h1{letter-spacing:-2.3px}.scenarios{grid-template-columns:1fr}
+ .scenario{min-height:auto;padding:14px}.scenario strong{margin:5px 0}
+ .input-card{padding:15px}.actions{align-items:flex-start;flex-direction:column}
+ .primary{width:100%;justify-content:center}.results-head{align-items:flex-start;flex-direction:column}
+ footer{flex-direction:column}
+}
+
+/* BLINDSPOT — MIDNIGHT SIGNAL THEME */
+:root {
+  color-scheme: dark;
+  --bg: #0B1020;
+  --surface: #121A2B;
+  --surface-raised: #161F33;
+  --border: #29354B;
+  --text: #F4F7FB;
+  --muted: #A1AEC2;
+  --accent: #8B7CFF;
+  --accent-hover: #A49AFF;
+  --warning: #FFBE5C;
+  --success: #42D6B5;
+  --danger: #FF7777;
+}
+
+html { background: var(--bg) !important; color-scheme: dark; }
+body {
+  background:
+    radial-gradient(ellipse at 50% -15%, rgba(139,124,255,.17), transparent 48%),
+    var(--bg) !important;
+  color: var(--text) !important;
+}
+body, button, textarea, input, select { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+
+h1, h2, h3, strong, label { color: var(--text); }
+p, small, .muted, .subtitle, .description { color: var(--muted); }
+
+header, nav, footer {
+  border-color: var(--border) !important;
+}
+
+main { color: var(--text); }
+
+section, article, .card, .panel, .workspace, .composer,
+.result-card, .finding, .scenario-card, .scenario,
+.results-panel, .input-panel {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 12px 36px rgba(0,0,0,.12);
+}
+
+textarea, input, select {
+  background: #0D1424 !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px;
+}
+textarea::placeholder, input::placeholder { color: #7F8CA3 !important; }
+textarea:focus, input:focus, select:focus {
+  outline: 2px solid rgba(139,124,255,.45);
+  border-color: var(--accent) !important;
+}
+
+button {
+  background: var(--accent) !important;
+  color: #100D25 !important;
+  border: 1px solid transparent !important;
+  border-radius: 11px;
+  font-weight: 650;
+  transition: transform .16s ease, filter .16s ease, border-color .16s ease;
+}
+button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+button:focus-visible {
+  outline: 3px solid var(--accent-hover);
+  outline-offset: 3px;
+}
+button[data-scenario] {
+  background: var(--surface-raised) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+button[data-scenario]:hover {
+  border-color: var(--accent) !important;
+  background: #202944 !important;
+}
+
+a { color: var(--accent-hover); }
+hr { border-color: var(--border); }
+
+.badge, .pill, .tag, .eyebrow {
+  border-color: var(--border);
+}
+::selection { background: rgba(139,124,255,.35); color: white; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+</style>
+<style>\n
+/* BLINDSPOT — SIGNAL PAPER: FINAL VISUAL DIRECTION */
+:root {
+  color-scheme: light;
+  --bg: #F3F5F9;
+  --surface: #FBFCFE;
+  --surface-soft: #EEF1F7;
+  --border: #DCE2EC;
+  --text: #20263A;
+  --muted: #68738A;
+  --accent: #5146A5;
+  --accent-hover: #403583;
+  --warning: #986016;
+  --success: #087F70;
+  --danger: #B83F50;
+}
+
+html, body {
+  background: #F3F5F9 !important;
+  background-image: none !important;
+  color: #20263A !important;
+  color-scheme: light !important;
+}
+
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif !important;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, strong, label {
+  color: #20263A !important;
+}
+p, small, .muted, .subtitle, .description {
+  color: #68738A;
+}
+
+section, article, .card, .panel, .workspace, .composer,
+.result-card, .finding, .scenario-card, .scenario,
+.results-panel, .input-panel {
+  background-color: #FBFCFE !important;
+  color: #20263A !important;
+  border-color: #DCE2EC !important;
+  box-shadow: 0 5px 20px rgba(33, 44, 75, 0.045) !important;
+}
+
+textarea, input, select {
+  background: #E9EDF5 !important;
+  background-color: #E9EDF5 !important;
+  color: #20263A !important;
+  border: 1px solid #D4DBE8 !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 2px rgba(30, 40, 65, .025) !important;
+  caret-color: #5146A5;
+}
+
+textarea {
+  min-height: 150px;
+  line-height: 1.7 !important;
+}
+textarea::placeholder, input::placeholder {
+  color: #7B8498 !important;
+  opacity: 1;
+}
+textarea:focus, input:focus, select:focus {
+  outline: 3px solid rgba(81, 70, 165, .13) !important;
+  border-color: #8176C8 !important;
+}
+
+button {
+  background: #5146A5 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #5146A5 !important;
+  border-radius: 10px !important;
+  font-weight: 650 !important;
+  box-shadow: none !important;
+  transition: background .16s ease, transform .16s ease;
+}
+button:hover {
+  background: #403583 !important;
+  border-color: #403583 !important;
+  transform: translateY(-1px);
+}
+button:focus-visible {
+  outline: 3px solid rgba(81, 70, 165, .3) !important;
+  outline-offset: 3px;
+}
+button[data-scenario] {
+  background: #EEF0F8 !important;
+  color: #393565 !important;
+  border-color: #E0E2F0 !important;
+}
+button[data-scenario]:hover {
+  background: #E3E5F5 !important;
+  border-color: #B9B3E3 !important;
+}
+
+a { color: #5146A5; }
+hr { border-color: #DCE2EC !important; }
+::selection { background: #DCD8F7; color: #20263A; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
+\n</style>\n</head>
+<body>
+<div class="shell">
+<header>
+  <div class="brand"><div class="mark">◉</div>blindspot<span style="font-weight:400;color:#8b928a">.</span></div>
+  <div class="status"><span class="dot"></span> Omission detection, in progress</div>
+</header>
+
+<main>
+  <div class="eyebrow">A second pair of eyes for your plans</div>
+  <h1>Your plan looks fine.<br><span>What did it miss?</span></h1>
+  <p class="sub">Paste your plans, promises, or to-do list. BlindSpot looks for clashes, forgotten commitments, and steps you may have overlooked.</p>
+
+  <div class="section-label">TRY A SCENARIO</div>
+  <div class="scenarios">
+    <button class="scenario" data-scenario="calendar">
+      <span class="num">01 / SCHEDULE</span>
+      <strong>Impossible Tuesday</strong>
+      <small>Two things. The same time. Different places.</small>
+    </button>
+    <button class="scenario" data-scenario="promise">
+      <span class="num">02 / COMMITMENT</span>
+      <strong>The forgotten promise</strong>
+      <small>You said you would do it. Did you plan it?</small>
+    </button>
+    <button class="scenario" data-scenario="flight">
+      <span class="num">03 / PREPARATION</span>
+      <strong>The missing step</strong>
+      <small>The flight is booked. Is everything else ready?</small>
+    </button>
+  </div>
+
+  <section class="input-card">
+    <div class="input-head">
+      <strong>What's on your mind?</strong>
+      <span id="charCount">0 / 10,000</span>
+    </div>
+    <textarea id="plan" maxlength="10000" placeholder="Tomorrow I have a meeting at 10, a flight at 10:30, and I promised Sara I'd send her the report…"></textarea>
+    <div class="actions">
+      <span class="hint">Your plan in. Potential blind spots out.</span>
+      <button id="analyzeBtn" class="primary"><span>Find my blind spots</span><span class="arrow">↗</span></button>
+    </div>
+    <div id="message" role="alert"></div>
+  </section>
+
+  <section id="results" aria-live="polite">
+    <div class="results-head">
+      <div>
+        <div class="eyebrow">Your blind spot report</div>
+        <h2 id="resultTitle">A few things to check.</h2>
+        <p id="resultSubtitle">Here is what might need your attention.</p>
+      </div>
+      <span id="resultCount" class="count">0 FOUND</span>
+    </div>
+    <div id="findings" class="findings"></div>
+    <div class="result-actions">
+      <button id="downloadBtn" class="secondary">Export report ↓</button>
+      <button id="clearBtn" class="secondary">Start over ↗</button>
+    </div>
+  </section>
+</main>
+
+<footer><span>BLINDSPOT · WHAT AM I FORGETTING?</span><span>Find the gap before it finds you.</span></footer>
+</div>
+
+<script>
+const scenarios = {
+  calendar: "Tomorrow I have a meeting from 10 AM to 11 AM in Lahore and a flight from 10:30 AM to 12:30 PM in Lahore.",
+  promise: "I promised Sara I would send the report tomorrow, but I have not added it to my plan.",
+  flight: "Tomorrow I have a flight at 8 AM from Lahore Airport. I have not mentioned checking in or preparing my travel documents."
+};
+const plan = document.getElementById("plan");
+const count = document.getElementById("charCount");
+const analyzeBtn = document.getElementById("analyzeBtn");
+const message = document.getElementById("message");
+const results = document.getElementById("results");
+const findings = document.getElementById("findings");
+let lastReport = [];
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+plan.addEventListener("input", () => count.textContent = `${plan.value.length.toLocaleString()} / 10,000`);
+
+document.querySelectorAll("[data-scenario]").forEach(button => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("[data-scenario]").forEach(b => b.classList.remove("active"));
+    button.classList.add("active");
+    plan.value = scenarios[button.dataset.scenario];
+    count.textContent = `${plan.value.length.toLocaleString()} / 10,000`;
+    message.style.display = "none";
+    plan.focus();
+  });
+});
+
+function iconFor(type) {
+  if (/temporal|collision/i.test(type)) return "↔";
+  if (/ghost|commitment/i.test(type)) return "!";
+  if (/prerequisite|missing/i.test(type)) return "＋";
+  return "◎";
+}
+function renderFinding(item) {
+  const evidence = Array.isArray(item.evidence) ? item.evidence : [];
+  return `<article class="finding">
+    <div class="finding-top">
+      <div class="finding-icon">${iconFor(item.type)}</div>
+      <div class="finding-type">${escapeHtml(item.type || "Potential blind spot")}</div>
+    </div>
+    <h3>${escapeHtml(item.problem || "Something may need your attention.")}</h3>
+    ${evidence.length ? `<div class="evidence">${evidence.map(e => escapeHtml(e)).join("<br>")}</div>` : ""}
+    ${item.suggested_action ? `<div class="next"><b>What to do next</b>${escapeHtml(item.suggested_action)}</div>` : ""}
+    ${item.confidence ? `<div class="confidence">Confidence · ${escapeHtml(item.confidence)}</div>` : ""}
+  </article>`;
+}
+async function analyze() {
+  const text = plan.value.trim();
+  if (!text) {
+    message.textContent = "Add a plan or choose a scenario first.";
+    message.style.display = "block";
+    plan.focus();
+    return;
+  }
+  message.style.display = "none";
+  results.style.display = "none";
+  analyzeBtn.disabled = true;
+  analyzeBtn.innerHTML = "<span>Looking for blind spots…</span>";
+  try {
+    const response = await fetch("/analyze-text", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({text})
+    });
+    if (!response.ok) throw new Error(`Analysis failed (HTTP ${response.status}).`);
+    const data = await response.json();
+    if (!Array.isArray(data)) throw new Error("The server returned an unexpected response.");
+    lastReport = data;
+    findings.innerHTML = data.length
+      ? data.map(renderFinding).join("")
+      : `<article class="finding"><h3>No blind spots detected this time.</h3><p class="problem">That doesn't guarantee your plan is complete. Give it one more review.</p></article>`;
+    document.getElementById("resultCount").textContent = `${data.length} FOUND`;
+    document.getElementById("resultTitle").textContent = data.length
+      ? `${data.length} thing${data.length === 1 ? "" : "s"} worth checking.`
+      : "Nothing flagged this time.";
+    document.getElementById("resultSubtitle").textContent = data.length
+      ? "Here is the evidence and a practical next step for each finding."
+      : "A clean result is helpful, but not a guarantee.";
+    results.style.display = "block";
+    results.scrollIntoView({behavior:"smooth",block:"start"});
+  } catch (error) {
+    message.textContent = error.message || "Something went wrong. Please try again.";
+    message.style.display = "block";
+  } finally {
+    analyzeBtn.disabled = false;
+    analyzeBtn.innerHTML = "<span>Find my blind spots</span><span class='arrow'>↗</span>";
+  }
+}
+analyzeBtn.addEventListener("click", analyze);
+plan.addEventListener("keydown", event => {
+  if ((event.ctrlKey || event.metaKey) && event.key === "Enter") analyze();
+});
+document.getElementById("clearBtn").addEventListener("click", () => {
+  plan.value = "";
+  count.textContent = "0 / 10,000";
+  findings.innerHTML = "";
+  results.style.display = "none";
+  message.style.display = "none";
+  lastReport = [];
+  document.querySelectorAll("[data-scenario]").forEach(b => b.classList.remove("active"));
+  plan.focus();
+});
+document.getElementById("downloadBtn").addEventListener("click", () => {
+  const report = {
+    product:"BlindSpot",
+    generated_at:new Date().toISOString(),
+    plan:plan.value,
+    findings:lastReport
+  };
+  const blob = new Blob([JSON.stringify(report,null,2)],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "blindspot-report.json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
