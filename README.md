@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # BlindSpot
 
 **Find the problems your plan forgot to account for.**
@@ -55,6 +54,3 @@ BlindSpot is a hackathon prototype. Detection results should be reviewed by the 
 ## Security
 
 Never commit API keys, `.env` files, credentials, or private keys. Configure any required provider credentials locally.
-=======
-# blindspot
->>>>>>> aaa29a927525ea6e109a6c7e7f1d936d54a28edb
